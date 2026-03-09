@@ -209,21 +209,28 @@ function randomCode() {
 async function generateLink() {
   const username = document.getElementById("username").value.trim();
   if(!username){
-    alert("Enter your Minecraft username!");
+    alert("Enter a Minecraft username!");
     return;
   }
 
-  const code = randomCode();
+  // Generate a random 6-character code
+  const code = Math.random().toString(36).substring(2,8).toUpperCase();
 
-  await db.collection("links").doc(code).set({
-    username: username,
-    linked: false,
-    created: Date.now()
-  });
+  try {
+    // Write to Firestore 'links' collection
+    await db.collection("links").doc(code).set({
+      username: username,
+      linked: false,
+      created: Date.now()
+    });
 
-  document.getElementById("code").innerText = "Run /link " + code + " in-game";
-}
-
+    document.getElementById("code").innerText = "Run /link " + code + " in-game";
+    console.log("Code created:", code); // Debug: shows in browser console
+  } catch(err) {
+    console.error("Error writing to Firestore:", err);
+    alert("Failed to generate code. Check console for errors.");
+  }
+  }
 // ==== LOAD PLAYER DATA ====
 async function loadPlayer(username) {
   const doc = await db.collection("players").doc(username).get();
