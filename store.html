@@ -3,151 +3,137 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>SDP SMP Store</title>
 
 <style>
-/* RESET */
-*{
-margin:0;
-padding:0;
-box-sizing:border-box;
-}
 
-/* PAGE STRUCTURE */
 body{
-font-family:Segoe UI, Arial, sans-serif;
+margin:0;
+font-family:Arial;
 background:#0b0b0b;
-color:#e6e6e6;
-min-height:100vh;
+color:white;
 display:flex;
 flex-direction:column;
+min-height:100vh;
 }
 
-/* NAVBAR */
-.navbar{
+header{
+background:#111;
+padding:15px;
 display:flex;
 justify-content:space-between;
 align-items:center;
-padding:16px 24px;
-background:#111;
-border-bottom:1px solid #1e1e1e;
-flex-wrap:wrap;
-}
-.logo-area{
-display:flex;
-align-items:center;
-gap:10px;
-}
-.logo{
-width:38px;
-height:38px;
-}
-nav{
-display:flex;
-gap:20px;
-flex-wrap:wrap;
-}
-nav a{
-text-decoration:none;
-color:#bfbfbf;
-transition:0.2s;
-}
-nav a:hover{
-color:#00e5ff;
+border-bottom:1px solid #00ffcc;
 }
 
-/* MAIN CONTENT */
+.logo{
+font-size:20px;
+font-weight:bold;
+color:#00ffcc;
+}
+
+nav a{
+color:white;
+margin-left:20px;
+text-decoration:none;
+}
+
+nav a:hover{
+color:#00ffcc;
+}
+
 main{
 flex:1;
-}
-.container{
-display:flex;
-flex-wrap:wrap;
-gap:30px;
-justify-content:center;
-padding:50px 20px;
+padding:40px 20px;
+max-width:900px;
+margin:auto;
+width:100%;
 }
 
-/* CARDS */
 .card{
 background:#121212;
-border:1px solid #1e1e1e;
-border-radius:12px;
+border:1px solid #00ffcc33;
 padding:25px;
-width:300px;
-transition:0.25s;
-}
-.card:hover{
-border-color:#00e5ff;
-box-shadow:0 0 12px rgba(0,229,255,0.18);
-}
-.card h2{
-margin-bottom:15px;
+border-radius:10px;
+margin-bottom:20px;
+box-shadow:0 0 10px #00ffcc22;
 }
 
-/* INPUT */
+h2{
+margin-top:0;
+}
+
 input{
 width:100%;
-padding:10px;
+padding:12px;
 margin-top:10px;
 background:#0f0f0f;
-border:1px solid #2a2a2a;
-border-radius:6px;
+border:1px solid #00ffcc44;
 color:white;
-}
-
-/* BUTTON */
-button{
-width:100%;
-padding:10px;
-margin-top:10px;
-border:none;
 border-radius:6px;
-background:#00e5ff;
+}
+
+button{
+margin-top:12px;
+padding:12px;
+width:100%;
+border:none;
+background:#00ffcc;
 color:black;
-font-weight:600;
+font-weight:bold;
+border-radius:6px;
 cursor:pointer;
-transition:0.2s;
 }
+
 button:hover{
-background:#00c7de;
+background:#00ddb0;
 }
 
-/* FOOTER */
+.rank{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-top:15px;
+background:#0f0f0f;
+padding:15px;
+border-radius:6px;
+}
+
+.rank button{
+width:auto;
+padding:8px 16px;
+}
+
 footer{
-text-align:center;
-padding:18px;
 background:#111;
-border-top:1px solid #1e1e1e;
-color:#888;
-margin-top:40px;
+text-align:center;
+padding:10px;
+border-top:1px solid #00ffcc;
 }
 
-/* MOBILE */
-@media(max-width:650px){
-.navbar{
+@media(max-width:600px){
+
+.rank{
 flex-direction:column;
 align-items:flex-start;
-gap:10px;
 }
-.card{
+
+.rank button{
+margin-top:10px;
 width:100%;
 }
-}
-</style>
 
-<!-- FIREBASE SDK -->
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js"></script>
+}
+
+</style>
 
 </head>
 <body>
 
-<header class="navbar">
-<div class="logo-area">
-<img src="file_00000000dde8720babf6ee062ba581a8__1_-removebg-preview.png" class="logo">
-<strong>SDP SMP</strong>
-</div>
+<header>
+
+<div class="logo">SDP SMP</div>
 
 <nav>
 <a href="index.html">Dashboard</a>
@@ -155,39 +141,71 @@ width:100%;
 <a href="tos.html">TOS</a>
 <a href="faq.html">FAQ</a>
 </nav>
+
 </header>
 
 <main>
-<div class="container">
 
 <div class="card">
+
 <h2>Login</h2>
-<input id="username" placeholder="Minecraft Username">
+
+<input id="username" placeholder="Enter Minecraft Username">
+
 <button onclick="generateLink()">Generate Link Code</button>
-<p id="code"></p>
+
+<p id="codeDisplay"></p>
+
+<button onclick="loginPlayer()">Login</button>
+
 </div>
 
-<div class="card" id="panel" style="display:none">
+<div id="storePanel" class="card" style="display:none">
+
 <h2>Player Panel</h2>
+
+<p>Player: <span id="playerName"></span></p>
 <p>Balance: <span id="balance"></span></p>
 <p>Rank: <span id="rank"></span></p>
-<button onclick="buyRank('VIP',200)">Buy VIP (200)</button>
-<button onclick="buyRank('MVP',500)">Buy MVP (500)</button>
+
 <button onclick="logout()">Logout</button>
+
+</div>
+
+<div id="rankStore" class="card" style="display:none">
+
+<h2>Ranks</h2>
+
+<div class="rank">
+<div>VIP Rank</div>
+<div>200 Coins</div>
+<button onclick="buyRank('VIP',200)">Buy</button>
+</div>
+
+<div class="rank">
+<div>MVP Rank</div>
+<div>500 Coins</div>
+<button onclick="buyRank('MVP',500)">Buy</button>
 </div>
 
 </div>
+
 </main>
 
 <footer>
 © 2026 SDP SMP
 </footer>
 
-<!-- COMBINED JAVASCRIPT -->
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js"></script>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
 <script>
-// ==== FIREBASE CONFIG ====
+
+// =====================
+// FIREBASE CONFIG
+// =====================
+
 const firebaseConfig = {
   apiKey: "AIzaSyDeuo2H8bqMJeQaKhHyZRJyCWCRtBYzF5w",
   authDomain: "sdp-smp-login.firebaseapp.com",
@@ -196,116 +214,116 @@ const firebaseConfig = {
   messagingSenderId: "16457314138",
   appId: "1:16457314138:web:0224bd327811d3080b8d63"
 };
-// Initialize Firebase
+
 firebase.initializeApp(firebaseConfig);
+
 const db = firebase.firestore();
 
-// ==== HELPER FUNCTION: GENERATE CODE ====
-function randomCode() {
-  return Math.random().toString(36).substring(2,8).toUpperCase();
+
+// =====================
+// GENERATE LINK CODE
+// =====================
+
+async function generateLink(){
+
+const username = document.getElementById("username").value.trim();
+
+if(username===""){
+alert("Enter username");
+return;
 }
 
-// ==== GENERATE LINK ====
-async function generateLink() {
-  const username = document.getElementById("username").value.trim();
-  if(!username){
-    alert("Enter a Minecraft username!");
-    return;
-  }
+const code = Math.random().toString(36).substring(2,8).toUpperCase();
 
-  // Generate a random 6-character code
-  const code = Math.random().toString(36).substring(2,8).toUpperCase();
+try{
 
-  try {
-    // Write to Firestore 'links' collection
-    await db.collection("links").doc(code).set({
-      username: username,
-      linked: false,
-      created: Date.now()
-    });
+await db.collection("links").doc(code).set({
 
-    document.getElementById("code").innerText = "Run /link " + code + " in-game";
-    console.log("Code created:", code); // Debug: shows in browser console
-  } catch(err) {
-    console.error("Error writing to Firestore:", err);
-    alert("Failed to generate code. Check console for errors.");
-  }
-  }
-// ==== LOAD PLAYER DATA ====
-async function loadPlayer(username) {
-  const doc = await db.collection("players").doc(username).get();
-  if(!doc.exists){
-    alert("Player not linked yet.");
-    return;
-  }
+username:username,
+linked:false,
+created:Date.now()
 
-  const data = doc.data();
+});
 
-  // Show panel
-  document.getElementById("panel").style.display = "block";
+document.getElementById("codeDisplay").innerText =
+"Run /link " + code + " in Minecraft chat";
 
-  // Update balance & rank
-  document.getElementById("balance").innerText = data.balance;
-  document.getElementById("rank").innerText = data.prefix;
+}catch(err){
 
-  // Save username in browser for persistent login
-  localStorage.setItem("username", username);
+console.error(err);
+alert("Failed to generate code");
+
 }
 
-// ==== BUY RANK / ITEM ====
-async function buyRank(rank, price){
-  const username = localStorage.getItem("username");
-  if(!username){
-    alert("You are not logged in!");
-    return;
-  }
-
-  const playerRef = db.collection("players").doc(username);
-  const snap = await playerRef.get();
-
-  if(!snap.exists){
-    alert("Player not linked yet.");
-    return;
-  }
-
-  const data = snap.data();
-
-  if(data.balance < price){
-    alert("Not enough money!");
-    return;
-  }
-
-  // Deduct balance
-  await playerRef.update({
-    balance: data.balance - price
-  });
-
-  // Add purchase request
-  await db.collection("purchases").add({
-    username: username,
-    rank: rank,
-    price: price,
-    status: "pending",
-    time: Date.now()
-  });
-
-  alert(`Purchased ${rank}! Check in-game for the applied rank.`);
-  loadPlayer(username);
 }
 
-// ==== LOGOUT ====
+
+// =====================
+// LOGIN PLAYER
+// =====================
+ 
+// =====================
+
 function logout(){
-  localStorage.removeItem("username");
-  location.reload();
+
+localStorage.removeItem("sdp_user");
+
+location.reload();
+
 }
 
-// ==== PERSISTENT LOGIN ====
-window.onload = () => {
-  const user = localStorage.getItem("username");
-  if(user){
-    loadPlayer(user);
-  }
+
+// =====================
+// BUY RANK
+// =====================
+
+async function buyRank(rankName,price){
+
+const username=localStorage.getItem("sdp_user");
+
+if(!username){
+
+alert("Login first");
+return;
+
 }
+
+const playerRef=db.collection("players").doc(username);
+
+const doc=await playerRef.get();
+
+if(!doc.exists){
+
+alert("Player not found");
+return;
+
+}
+
+const data=doc.data();
+
+if(data.balance<price){
+
+alert("Not enough balance");
+return;
+
+}
+
+const newBalance=data.balance-price;
+
+await playerRef.update({
+
+balance:newBalance,
+prefix:rankName
+
+});
+
+document.getElementById("balance").innerText=newBalance;
+document.getElementById("rank").innerText=rankName;
+
+alert("Rank purchased!");
+
+}
+
 </script>
 
 </body>
