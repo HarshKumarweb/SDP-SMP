@@ -17,8 +17,6 @@ justify-content:space-between;
 align-items:center;
 }
 
-h2{margin:0}
-
 .logout{
 background:#ff3d5a;
 border:none;
@@ -57,9 +55,9 @@ margin-top:10px;
 padding:10px;
 border:none;
 border-radius:6px;
-cursor:pointer;
 background:#ff3d5a;
 color:white;
+cursor:pointer;
 }
 
 .authbox{
@@ -70,7 +68,7 @@ padding:25px;
 border-radius:12px;
 }
 
-.switch{
+.link{
 text-align:center;
 margin-top:12px;
 font-size:14px;
@@ -102,13 +100,18 @@ margin-top:4px;
 </style></head><body><header>
 <h2>SDP Community</h2>
 <button id="logoutBtn" class="logout">Logout</button>
-</header><div id="auth" class="authbox"><h3 id="authTitle">Login</h3><input id="username" placeholder="username (signup only)" style="display:none">
-<input id="email" placeholder="email">
-<input id="password" type="password" placeholder="password"><button id="mainAuthBtn">Login</button>
+</header><div id="loginBox" class="authbox"><h3>Login</h3><input id="loginEmail" placeholder="Email">
+<input id="loginPassword" type="password" placeholder="Password"><button onclick="login()">Login</button>
 
-<div class="switch" id="switchAuth">
+<div class="link" onclick="showSignup()">
 Don't have an account? Sign up
-</div></div><div id="app" style="display:none"><div class="container"><div class="card"><h3>Create Post</h3><input id="title" placeholder="post title"><input type="file" id="image"><button onclick="createPost()">Upload Post</button>
+</div></div><div id="signupBox" class="authbox" style="display:none"><h3>Sign Up</h3><input id="signupUsername" placeholder="username (lowercase)">
+<input id="signupEmail" placeholder="email">
+<input id="signupPassword" type="password" placeholder="password"><button onclick="signup()">Create Account</button>
+
+<div class="link" onclick="showLogin()">
+Already have account? Login
+</div></div><div id="app" style="display:none"><div class="container"><div class="card"><h3>Create Post</h3><input id="title" placeholder="Post title"><input type="file" id="image"><button onclick="createPost()">Upload Post</button>
 
 </div><div id="feed"></div></div></div><script>
 
@@ -119,50 +122,21 @@ const db = createClient(
 "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV2Y3BxeXdtc3Vlc2hkZWxodHJyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM0MTI0OTMsImV4cCI6MjA4ODk4ODQ5M30.mg7BYbVYixYp5h1qRB57eccHypDMpuc_j6ZKJELOMSU"
 )
 
-let signupMode=false
-
-const usernameInput=document.getElementById("username")
-const authTitle=document.getElementById("authTitle")
-const mainBtn=document.getElementById("mainAuthBtn")
-const switchAuth=document.getElementById("switchAuth")
-
-switchAuth.onclick=()=>{
-
-signupMode=!signupMode
-
-if(signupMode){
-
-authTitle.innerText="Sign Up"
-mainBtn.innerText="Create Account"
-usernameInput.style.display="block"
-switchAuth.innerText="Already have account? Login"
-
-}else{
-
-authTitle.innerText="Login"
-mainBtn.innerText="Login"
-usernameInput.style.display="none"
-switchAuth.innerText="Don't have an account? Sign up"
-
+function showSignup(){
+document.getElementById("loginBox").style.display="none"
+document.getElementById("signupBox").style.display="block"
 }
 
-}
-
-mainBtn.onclick=()=>{
-
-if(signupMode){
-signup()
-}else{
-login()
-}
-
+function showLogin(){
+document.getElementById("signupBox").style.display="none"
+document.getElementById("loginBox").style.display="block"
 }
 
 async function signup(){
 
-let email=document.getElementById("email").value
-let password=document.getElementById("password").value
-let username=usernameInput.value
+let username=document.getElementById("signupUsername").value
+let email=document.getElementById("signupEmail").value
+let password=document.getElementById("signupPassword").value
 
 if(username!==username.toLowerCase()){
 alert("Username must be lowercase")
@@ -170,7 +144,7 @@ return
 }
 
 if(password.length<8){
-alert("Password must be 8 characters minimum")
+alert("Password must be at least 8 characters")
 return
 }
 
@@ -184,19 +158,25 @@ alert(error.message)
 return
 }
 
+if(!data.user){
+alert("Signup failed")
+return
+}
+
 await db.from("users").insert({
 id:data.user.id,
 username:username
 })
 
-alert("Account created. Now login.")
+alert("Account created. Please login.")
+showLogin()
 
 }
 
 async function login(){
 
-let email=document.getElementById("email").value
-let password=document.getElementById("password").value
+let email=document.getElementById("loginEmail").value
+let password=document.getElementById("loginPassword").value
 
 const { error } = await db.auth.signInWithPassword({
 email:email,
@@ -218,7 +198,8 @@ const { data } = await db.auth.getUser()
 
 if(data.user){
 
-document.getElementById("auth").style.display="none"
+document.getElementById("loginBox").style.display="none"
+document.getElementById("signupBox").style.display="none"
 document.getElementById("app").style.display="block"
 document.getElementById("logoutBtn").style.display="block"
 
@@ -267,22 +248,30 @@ async function createPost(){
 let title=document.getElementById("title").value
 let file=document.getElementById("image").files[0]
 
-if(!file)return
+if(!file){
+alert("Select an image")
+return
+}
 
 let image=await compress(file)
 
-const { data } = await db.auth.getUser()
+const { data:userData } = await db.auth.getUser()
 
-let user=await db
+let { data:userRow } = await db
 .from("users")
 .select("username")
-.eq("id",data.user.id)
+.eq("id",userData.user.id)
 .single()
+
+if(!userRow){
+alert("User profile missing")
+return
+}
 
 await db.from("posts").insert({
 title:title,
 image:image,
-username:user.data.username,
+username:userRow.username,
 likes:[]
 })
 
@@ -313,13 +302,11 @@ div.innerHTML=`
 <img src="${post.image}" class="postimg">
 
 <div>
-
 <span class="like" onclick="likePost('${post.id}')">❤</span>
 ${post.likes.length} likes
-
 </div>
 
-<input placeholder="comment..." 
+<input placeholder="comment..."
 onkeypress="if(event.key==='Enter')commentPost('${post.id}',this.value,this)">
 
 <div id="c${post.id}"></div>
@@ -336,7 +323,7 @@ loadComments(post.id)
 
 async function likePost(id){
 
-const { data } = await db.auth.getUser()
+const { data:userData } = await db.auth.getUser()
 
 let { data:post } = await db
 .from("posts")
@@ -346,8 +333,8 @@ let { data:post } = await db
 
 let likes=post.likes || []
 
-if(!likes.includes(data.user.id)){
-likes.push(data.user.id)
+if(!likes.includes(userData.user.id)){
+likes.push(userData.user.id)
 }
 
 await db
@@ -363,17 +350,17 @@ async function commentPost(id,text,input){
 
 if(!text)return
 
-const { data } = await db.auth.getUser()
+const { data:userData } = await db.auth.getUser()
 
-let user=await db
+let { data:userRow } = await db
 .from("users")
 .select("username")
-.eq("id",data.user.id)
+.eq("id",userData.user.id)
 .single()
 
 await db.from("comments").insert({
 post_id:id,
-username:user.data.username,
+username:userRow.username,
 text:text
 })
 
