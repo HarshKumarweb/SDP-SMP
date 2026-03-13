@@ -1,14 +1,6 @@
-<!DOCTYPE html>
-<html>
-<head>
-
-<meta name="viewport" content="width=device-width,initial-scale=1">
-
-<title>SDP Community</title>
-
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-
-<style>
+<!DOCTYPE html><html>
+<head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1"><title>SDP Community</title><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><style>
 
 body{
 margin:0;
@@ -19,9 +11,22 @@ color:white;
 
 header{
 background:#151515;
-padding:15px;
+padding:12px 18px;
 display:flex;
 justify-content:space-between;
+align-items:center;
+}
+
+h2{margin:0}
+
+.logout{
+background:#ff3d5a;
+border:none;
+padding:6px 10px;
+font-size:12px;
+border-radius:6px;
+cursor:pointer;
+display:none;
 }
 
 .container{
@@ -37,17 +42,39 @@ border-radius:10px;
 margin-bottom:20px;
 }
 
-input,button{
+input{
 width:100%;
 padding:10px;
 margin-top:10px;
 border:none;
 border-radius:6px;
+background:#2a2a2a;
+color:white;
 }
 
 button{
+margin-top:10px;
+padding:10px;
+border:none;
+border-radius:6px;
+cursor:pointer;
 background:#ff3d5a;
 color:white;
+}
+
+.authbox{
+max-width:350px;
+margin:80px auto;
+background:#1c1c1c;
+padding:25px;
+border-radius:12px;
+}
+
+.switch{
+text-align:center;
+margin-top:12px;
+font-size:14px;
+color:#aaa;
 cursor:pointer;
 }
 
@@ -67,94 +94,102 @@ cursor:pointer;
 font-size:20px;
 }
 
-.like.red{
-color:red;
+.comment{
+font-size:14px;
+margin-top:4px;
 }
 
-.authbox{
-max-width:350px;
-margin:80px auto;
-background:#1c1c1c;
-padding:25px;
-border-radius:12px;
-}
-
-</style>
-
-</head>
-
-<body>
-
-<header>
+</style></head><body><header>
 <h2>SDP Community</h2>
-<button id="logout">Logout</button>
-</header>
-
-<div id="auth" class="authbox">
-
-<h3>Login / Signup</h3>
-
-<input id="username" placeholder="username (signup only)">
+<button id="logoutBtn" class="logout">Logout</button>
+</header><div id="auth" class="authbox"><h3 id="authTitle">Login</h3><input id="username" placeholder="username (signup only)" style="display:none">
 <input id="email" placeholder="email">
-<input id="password" type="password" placeholder="password">
+<input id="password" type="password" placeholder="password"><button id="mainAuthBtn">Login</button>
 
-<button onclick="signup()">Sign Up</button>
-<button onclick="login()">Login</button>
+<div class="switch" id="switchAuth">
+Don't have an account? Sign up
+</div></div><div id="app" style="display:none"><div class="container"><div class="card"><h3>Create Post</h3><input id="title" placeholder="post title"><input type="file" id="image"><button onclick="createPost()">Upload Post</button>
 
-</div>
+</div><div id="feed"></div></div></div><script>
 
-<div id="app" style="display:none">
+const { createClient } = supabase
 
-<div class="container">
-
-<div class="card">
-
-<h3>Create Post</h3>
-
-<input id="title" placeholder="title">
-<input type="file" id="image">
-
-<button onclick="createPost()">Upload</button>
-
-</div>
-
-<div id="feed"></div>
-
-</div>
-
-</div>
-
-<script>
-
-const supabase = supabase.createClient(
-"postgresql://postgres:[YOUR-PASSWORD]@db.evcpqywmsueshdelhtrr.supabase.co:5432/postgres",
-"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV2Y3BxeXdtc3Vlc2hkZWxodHJyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM0MTI0OTMsImV4cCI6MjA4ODk4ODQ5M30.mg7BYbVYixYp5h1qRB57eccHypDMpuc_j6ZKJELOMSU"
+const db = createClient(
+"YOUR_SUPABASE_URL",
+"YOUR_SUPABASE_ANON_KEY"
 )
+
+let signupMode=false
+
+const usernameInput=document.getElementById("username")
+const authTitle=document.getElementById("authTitle")
+const mainBtn=document.getElementById("mainAuthBtn")
+const switchAuth=document.getElementById("switchAuth")
+
+switchAuth.onclick=()=>{
+
+signupMode=!signupMode
+
+if(signupMode){
+
+authTitle.innerText="Sign Up"
+mainBtn.innerText="Create Account"
+usernameInput.style.display="block"
+switchAuth.innerText="Already have account? Login"
+
+}else{
+
+authTitle.innerText="Login"
+mainBtn.innerText="Login"
+usernameInput.style.display="none"
+switchAuth.innerText="Don't have an account? Sign up"
+
+}
+
+}
+
+mainBtn.onclick=()=>{
+
+if(signupMode){
+signup()
+}else{
+login()
+}
+
+}
 
 async function signup(){
 
 let email=document.getElementById("email").value
 let password=document.getElementById("password").value
-let username=document.getElementById("username").value
+let username=usernameInput.value
 
 if(username!==username.toLowerCase()){
-alert("username must be lowercase")
+alert("Username must be lowercase")
 return
 }
 
-const {data,error}=await supabase.auth.signUp({
+if(password.length<8){
+alert("Password must be 8 characters minimum")
+return
+}
+
+const { data, error } = await db.auth.signUp({
 email:email,
 password:password
 })
 
-if(error){alert(error.message);return}
+if(error){
+alert(error.message)
+return
+}
 
-await supabase.from("users").insert({
+await db.from("users").insert({
 id:data.user.id,
 username:username
 })
 
-alert("account created")
+alert("Account created. Now login.")
 
 }
 
@@ -163,12 +198,15 @@ async function login(){
 let email=document.getElementById("email").value
 let password=document.getElementById("password").value
 
-const {error}=await supabase.auth.signInWithPassword({
+const { error } = await db.auth.signInWithPassword({
 email:email,
 password:password
 })
 
-if(error){alert(error.message)}
+if(error){
+alert(error.message)
+return
+}
 
 checkUser()
 
@@ -176,12 +214,13 @@ checkUser()
 
 async function checkUser(){
 
-const {data}=await supabase.auth.getUser()
+const { data } = await db.auth.getUser()
 
 if(data.user){
 
 document.getElementById("auth").style.display="none"
 document.getElementById("app").style.display="block"
+document.getElementById("logoutBtn").style.display="block"
 
 loadPosts()
 
@@ -191,14 +230,14 @@ loadPosts()
 
 checkUser()
 
-document.getElementById("logout").onclick=async()=>{
+document.getElementById("logoutBtn").onclick=async()=>{
 
-await supabase.auth.signOut()
+await db.auth.signOut()
 location.reload()
 
 }
 
-async function compress(file){
+function compress(file){
 
 return new Promise(resolve=>{
 
@@ -228,19 +267,21 @@ async function createPost(){
 let title=document.getElementById("title").value
 let file=document.getElementById("image").files[0]
 
-let img=await compress(file)
+if(!file)return
 
-const {data}=await supabase.auth.getUser()
+let image=await compress(file)
 
-let user=await supabase
+const { data } = await db.auth.getUser()
+
+let user=await db
 .from("users")
 .select("username")
 .eq("id",data.user.id)
 .single()
 
-await supabase.from("posts").insert({
+await db.from("posts").insert({
 title:title,
-image:img,
+image:image,
 username:user.data.username,
 likes:[]
 })
@@ -254,39 +295,40 @@ async function loadPosts(){
 let feed=document.getElementById("feed")
 feed.innerHTML=""
 
-let {data}=await supabase
+let { data } = await db
 .from("posts")
 .select("*")
 .order("created_at",{ascending:false})
 
-data.forEach(p=>{
+data.forEach(post=>{
 
 let div=document.createElement("div")
 div.className="card"
 
 div.innerHTML=`
 
-<div class="username">${p.username}</div>
-<div>${p.title}</div>
+<div class="username">${post.username}</div>
+<div>${post.title}</div>
 
-<img src="${p.image}" class="postimg">
+<img src="${post.image}" class="postimg">
 
 <div>
 
-<span class="like" onclick="likePost('${p.id}')">❤</span>
-${p.likes.length} likes
+<span class="like" onclick="likePost('${post.id}')">❤</span>
+${post.likes.length} likes
 
 </div>
 
-<input placeholder="comment" onkeypress="if(event.key==='Enter')comment('${p.id}',this.value,this)">
+<input placeholder="comment..." 
+onkeypress="if(event.key==='Enter')commentPost('${post.id}',this.value,this)">
 
-<div id="c${p.id}"></div>
+<div id="c${post.id}"></div>
 
 `
 
 feed.appendChild(div)
 
-loadComments(p.id)
+loadComments(post.id)
 
 })
 
@@ -294,20 +336,21 @@ loadComments(p.id)
 
 async function likePost(id){
 
-const {data}=await supabase.auth.getUser()
+const { data } = await db.auth.getUser()
 
-let {data:post}=await supabase
+let { data:post } = await db
 .from("posts")
 .select("likes")
 .eq("id",id)
 .single()
 
-let likes=post.likes||[]
+let likes=post.likes || []
 
-if(!likes.includes(data.user.id))
+if(!likes.includes(data.user.id)){
 likes.push(data.user.id)
+}
 
-await supabase
+await db
 .from("posts")
 .update({likes:likes})
 .eq("id",id)
@@ -316,17 +359,19 @@ loadPosts()
 
 }
 
-async function comment(id,text,input){
+async function commentPost(id,text,input){
 
-const {data}=await supabase.auth.getUser()
+if(!text)return
 
-let user=await supabase
+const { data } = await db.auth.getUser()
+
+let user=await db
 .from("users")
 .select("username")
 .eq("id",data.user.id)
 .single()
 
-await supabase.from("comments").insert({
+await db.from("comments").insert({
 post_id:id,
 username:user.data.username,
 text:text
@@ -340,7 +385,7 @@ loadComments(id)
 
 async function loadComments(id){
 
-let {data}=await supabase
+let { data } = await db
 .from("comments")
 .select("*")
 .eq("post_id",id)
@@ -353,15 +398,15 @@ box.innerHTML=""
 
 data.forEach(c=>{
 
-let d=document.createElement("div")
-d.innerText=c.username+": "+c.text
-box.appendChild(d)
+let div=document.createElement("div")
+div.className="comment"
+div.innerText=c.username+": "+c.text
+
+box.appendChild(div)
 
 })
 
 }
 
-</script>
-
-</body>
+</script></body>
 </html>
