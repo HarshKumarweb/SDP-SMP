@@ -89,7 +89,6 @@ font-weight:bold;
 .like{
 cursor:pointer;
 font-size:20px;
-color:white;
 }
 
 .comment{
@@ -102,17 +101,18 @@ color:#ddd;
 <h2>SDP Community</h2>
 <button id="logoutBtn" class="logout">Logout</button>
 </header><div id="loginBox" class="authbox"><h3>Login</h3><input id="loginEmail" placeholder="Email">
-<input id="loginPassword" type="password" placeholder="Password"><button onclick="login()">Login</button>
+<input id="loginPassword" type="password" placeholder="Password"><button id="loginBtn">Login</button>
 
-<div class="link" onclick="showSignup()">
+<div class="link" id="goSignup">
 Don't have an account? Sign up
 </div></div><div id="signupBox" class="authbox" style="display:none"><h3>Sign Up</h3><input id="signupUsername" placeholder="username (lowercase)">
 <input id="signupEmail" placeholder="email">
-<input id="signupPassword" type="password" placeholder="password"><button onclick="signup()">Create Account</button>
+<input id="signupPassword" type="password" placeholder="password"><button id="signupBtn">Create Account</button>
 
-<div class="link" onclick="showLogin()">
+<div class="link" id="goLogin">
 Already have account? Login
-</div></div><div id="app" style="display:none"><div class="container"><div class="card"><h3>Create Post</h3><input id="title" placeholder="Post title"><input type="file" id="image"><button onclick="createPost()">Upload Post</button>
+</div></div><div id="app" style="display:none"><div class="container"><div class="card"><h3>Create Post</h3><input id="title" placeholder="Post title">
+<input type="file" id="image"><button id="uploadBtn">Upload Post</button>
 
 </div><div id="feed"></div></div></div><script>
 
@@ -121,16 +121,30 @@ const { createClient } = supabase
 const db = createClient(
 "https://evcpqywmsueshdelhtrr.supabase.co",
 "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV2Y3BxeXdtc3Vlc2hkZWxodHJyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM0MTI0OTMsImV4cCI6MjA4ODk4ODQ5M30.mg7BYbVYixYp5h1qRB57eccHypDMpuc_j6ZKJELOMSU"
-)a
+)
 
-function showSignup(){
-document.getElementById("loginBox").style.display="none"
-document.getElementById("signupBox").style.display="block"
+const loginBox = document.getElementById("loginBox")
+const signupBox = document.getElementById("signupBox")
+const app = document.getElementById("app")
+const logoutBtn = document.getElementById("logoutBtn")
+
+document.getElementById("goSignup").onclick = () => {
+loginBox.style.display="none"
+signupBox.style.display="block"
 }
 
-function showLogin(){
-document.getElementById("signupBox").style.display="none"
-document.getElementById("loginBox").style.display="block"
+document.getElementById("goLogin").onclick = () => {
+signupBox.style.display="none"
+loginBox.style.display="block"
+}
+
+document.getElementById("loginBtn").onclick = login
+document.getElementById("signupBtn").onclick = signup
+document.getElementById("uploadBtn").onclick = createPost
+
+logoutBtn.onclick = async ()=>{
+await db.auth.signOut()
+location.reload()
 }
 
 async function signup(){
@@ -160,7 +174,8 @@ return
 }
 
 alert("Account created. Please login.")
-showLogin()
+signupBox.style.display="none"
+loginBox.style.display="block"
 
 }
 
@@ -189,10 +204,10 @@ const { data } = await db.auth.getUser()
 
 if(data.user){
 
-document.getElementById("loginBox").style.display="none"
-document.getElementById("signupBox").style.display="none"
-document.getElementById("app").style.display="block"
-document.getElementById("logoutBtn").style.display="block"
+loginBox.style.display="none"
+signupBox.style.display="none"
+app.style.display="block"
+logoutBtn.style.display="block"
 
 loadPosts()
 
@@ -201,13 +216,6 @@ loadPosts()
 }
 
 checkUser()
-
-document.getElementById("logoutBtn").onclick=async()=>{
-
-await db.auth.signOut()
-location.reload()
-
-}
 
 function compress(file){
 
@@ -255,7 +263,7 @@ let { data:userRow } = await db
 .single()
 
 if(!userRow){
-alert("Profile not ready yet. Please wait a few seconds and try again.")
+alert("Profile not ready yet")
 return
 }
 
@@ -286,22 +294,16 @@ let div=document.createElement("div")
 div.className="card"
 
 div.innerHTML=`
-
 <div class="username">${post.username}</div>
 <div>${post.title}</div>
-
 <img src="${post.image}" class="postimg">
-
 <div>
 <span class="like" onclick="likePost('${post.id}')">❤</span>
 ${post.likes.length} likes
 </div>
-
 <input placeholder="comment..."
 onkeypress="if(event.key==='Enter')commentPost('${post.id}',this.value,this)">
-
 <div id="c${post.id}"></div>
-
 `
 
 feed.appendChild(div)
@@ -387,4 +389,4 @@ box.appendChild(div)
 }
 
 </script></body>
-</html>
+  </html>
