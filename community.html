@@ -1,15 +1,14 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
 <title>SDP Community</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 
 <style>
-
-*{
-box-sizing:border-box;
-}
 
 body{
 margin:0;
@@ -21,67 +20,12 @@ color:white;
 header{
 background:#151515;
 padding:15px;
-text-align:center;
-font-size:22px;
-font-weight:bold;
-}
-
-.auth-container{
 display:flex;
-justify-content:center;
-align-items:center;
-height:90vh;
-padding:15px;
-}
-
-.auth-box{
-background:#1c1c1c;
-padding:25px;
-border-radius:12px;
-width:360px;
-max-width:100%;
-}
-
-.auth-box input{
-width:100%;
-padding:10px;
-margin-top:10px;
-background:#2a2a2a;
-border:none;
-border-radius:6px;
-color:white;
-}
-
-.auth-box button{
-width:100%;
-padding:11px;
-margin-top:15px;
-background:#ff3d5a;
-border:none;
-border-radius:6px;
-color:white;
-font-size:15px;
-cursor:pointer;
-}
-
-.switch{
-text-align:center;
-margin-top:12px;
-font-size:14px;
-color:#aaa;
-cursor:pointer;
-}
-
-.error{
-background:#ff3d5a;
-padding:10px;
-border-radius:6px;
-margin-top:12px;
-display:none;
+justify-content:space-between;
 }
 
 .container{
-max-width:900px;
+max-width:800px;
 margin:auto;
 padding:15px;
 }
@@ -93,23 +37,24 @@ border-radius:10px;
 margin-bottom:20px;
 }
 
-.card input{
+input,button{
 width:100%;
 padding:10px;
 margin-top:10px;
-background:#2a2a2a;
 border:none;
 border-radius:6px;
-color:white;
 }
 
-.card button{
-margin-top:10px;
-padding:10px 15px;
+button{
 background:#ff3d5a;
-border:none;
-border-radius:6px;
 color:white;
+cursor:pointer;
+}
+
+.postimg{
+width:100%;
+border-radius:8px;
+margin-top:10px;
 }
 
 .username{
@@ -117,74 +62,44 @@ color:#4da3ff;
 font-weight:bold;
 }
 
-img{
-width:100%;
-border-radius:8px;
-margin-top:10px;
-}
-
-.actions{
-margin-top:10px;
-display:flex;
-gap:15px;
-align-items:center;
-}
-
 .like{
-font-size:20px;
 cursor:pointer;
+font-size:20px;
 }
 
 .like.red{
 color:red;
 }
 
-.comment{
-background:#2a2a2a;
-padding:6px;
-border-radius:5px;
-margin-top:6px;
-font-size:14px;
-}
-
-@media(max-width:600px){
-
-.auth-box{
-padding:20px;
-}
-
-header{
-font-size:19px;
-}
-
+.authbox{
+max-width:350px;
+margin:80px auto;
+background:#1c1c1c;
+padding:25px;
+border-radius:12px;
 }
 
 </style>
+
 </head>
 
 <body>
 
-<header>SDP Community</header>
+<header>
+<h2>SDP Community</h2>
+<button id="logout">Logout</button>
+</header>
 
-<div id="authArea" class="auth-container">
+<div id="auth" class="authbox">
 
-<div class="auth-box">
-
-<h3 id="authTitle">Login</h3>
+<h3>Login / Signup</h3>
 
 <input id="username" placeholder="username (signup only)">
 <input id="email" placeholder="email">
 <input id="password" type="password" placeholder="password">
 
-<button id="authBtn">Login</button>
-
-<div class="switch" id="switchMode">
-Don't have account? Sign up
-</div>
-
-<div class="error" id="authError"></div>
-
-</div>
+<button onclick="signup()">Sign Up</button>
+<button onclick="login()">Login</button>
 
 </div>
 
@@ -196,7 +111,7 @@ Don't have account? Sign up
 
 <h3>Create Post</h3>
 
-<input id="title" placeholder="Post title">
+<input id="title" placeholder="title">
 <input type="file" id="image">
 
 <button onclick="createPost()">Upload</button>
@@ -209,138 +124,83 @@ Don't have account? Sign up
 
 </div>
 
-
-<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
-
 <script>
 
-const firebaseConfig = {
-  apiKey: "AIzaSyDeuo2H8bqMJeQaKhHyZRJyCWCRtBYzF5w",
-  authDomain: "sdp-smp-login.firebaseapp.com",
-  projectId: "sdp-smp-login",
-  storageBucket: "sdp-smp-login.firebasestorage.app",
-  messagingSenderId: "16457314138",
-  appId: "1:16457314138:web:0224bd327811d3080b8d63"
-};
+const supabase = supabase.createClient(
+"YOUR_SUPABASE_URL",
+"YOUR_SUPABASE_ANON_KEY"
+)
 
-firebase.initializeApp(firebaseConfig);
+async function signup(){
 
-const auth=firebase.auth();
-const db=firebase.firestore();
-const storage=firebase.storage();
+let email=document.getElementById("email").value
+let password=document.getElementById("password").value
+let username=document.getElementById("username").value
 
-let signup=false;
-
-const username=document.getElementById("username");
-const email=document.getElementById("email");
-const password=document.getElementById("password");
-
-username.style.display="none";
-
-document.getElementById("switchMode").onclick=()=>{
-
-signup=!signup
-
-if(signup){
-
-document.getElementById("authTitle").innerText="Sign Up"
-document.getElementById("authBtn").innerText="Create Account"
-document.getElementById("switchMode").innerText="Already have account? Login"
-username.style.display="block"
-
-}else{
-
-document.getElementById("authTitle").innerText="Login"
-document.getElementById("authBtn").innerText="Login"
-document.getElementById("switchMode").innerText="Don't have account? Sign up"
-username.style.display="none"
-
-}
-
-}
-
-document.getElementById("authBtn").onclick=async()=>{
-
-let e=email.value
-let p=password.value
-let u=username.value
-
-const error=document.getElementById("authError")
-error.style.display="none"
-
-if(signup){
-
-if(u!==u.toLowerCase()){
-error.innerText="Username must be lowercase"
-error.style.display="block"
+if(username!==username.toLowerCase()){
+alert("username must be lowercase")
 return
 }
 
-if(p.length<8){
-error.innerText="Password must be at least 8 characters"
-error.style.display="block"
-return
-}
-
-let check=await db.collection("usernames").doc(u).get()
-
-if(check.exists){
-error.innerText="Username already taken"
-error.style.display="block"
-return
-}
-
-try{
-
-let cred=await auth.createUserWithEmailAndPassword(e,p)
-
-await db.collection("users").doc(cred.user.uid).set({
-username:u
+const {data,error}=await supabase.auth.signUp({
+email:email,
+password:password
 })
 
-await db.collection("usernames").doc(u).set({
-uid:cred.user.uid
+if(error){alert(error.message);return}
+
+await supabase.from("users").insert({
+id:data.user.id,
+username:username
 })
 
-}catch(err){
-error.innerText=err.message
-error.style.display="block"
-}
-
-}else{
-
-try{
-
-await auth.signInWithEmailAndPassword(e,p)
-
-}catch{
-error.innerText="Invalid login"
-error.style.display="block"
-}
+alert("account created")
 
 }
 
+async function login(){
+
+let email=document.getElementById("email").value
+let password=document.getElementById("password").value
+
+const {error}=await supabase.auth.signInWithPassword({
+email:email,
+password:password
+})
+
+if(error){alert(error.message)}
+
+checkUser()
+
 }
 
-auth.onAuthStateChanged(user=>{
+async function checkUser(){
 
-if(user){
+const {data}=await supabase.auth.getUser()
 
-document.getElementById("authArea").style.display="none"
+if(data.user){
+
+document.getElementById("auth").style.display="none"
 document.getElementById("app").style.display="block"
 
 loadPosts()
 
 }
 
-})
+}
+
+checkUser()
+
+document.getElementById("logout").onclick=async()=>{
+
+await supabase.auth.signOut()
+location.reload()
+
+}
 
 async function compress(file){
 
-return new Promise(res=>{
+return new Promise(resolve=>{
 
 let img=new Image()
 let canvas=document.createElement("canvas")
@@ -348,17 +208,12 @@ let ctx=canvas.getContext("2d")
 
 img.onload=()=>{
 
-let max=900
-let scale=max/img.width
-
-canvas.width=max
-canvas.height=img.height*scale
+canvas.width=600
+canvas.height=img.height*(600/img.width)
 
 ctx.drawImage(img,0,0,canvas.width,canvas.height)
 
-canvas.toBlob(blob=>{
-res(blob)
-},"image/jpeg",0.7)
+resolve(canvas.toDataURL("image/jpeg",0.7))
 
 }
 
@@ -373,28 +228,21 @@ async function createPost(){
 let title=document.getElementById("title").value
 let file=document.getElementById("image").files[0]
 
-if(!file)return
+let img=await compress(file)
 
-let blob=await compress(file)
+const {data}=await supabase.auth.getUser()
 
-let ref=storage.ref("posts/"+Date.now()+".jpg")
+let user=await supabase
+.from("users")
+.select("username")
+.eq("id",data.user.id)
+.single()
 
-await ref.put(blob)
-
-let url=await ref.getDownloadURL()
-
-let user=auth.currentUser
-let udoc=await db.collection("users").doc(user.uid).get()
-
-await db.collection("posts").add({
-
+await supabase.from("posts").insert({
 title:title,
-image:url,
-username:udoc.data().username,
-likes:[],
-comments:[],
-time:Date.now()
-
+image:img,
+username:user.data.username,
+likes:[]
 })
 
 loadPosts()
@@ -406,14 +254,12 @@ async function loadPosts(){
 let feed=document.getElementById("feed")
 feed.innerHTML=""
 
-let snap=await db.collection("posts").orderBy("time","desc").get()
+let {data}=await supabase
+.from("posts")
+.select("*")
+.order("created_at",{ascending:false})
 
-snap.forEach(doc=>{
-
-let p=doc.data()
-let id=doc.id
-
-let liked=p.likes.includes(auth.currentUser.uid)
+data.forEach(p=>{
 
 let div=document.createElement("div")
 div.className="card"
@@ -423,34 +269,24 @@ div.innerHTML=`
 <div class="username">${p.username}</div>
 <div>${p.title}</div>
 
-<img src="${p.image}">
+<img src="${p.image}" class="postimg">
 
-<div class="actions">
+<div>
 
-<span class="like ${liked?"red":""}" onclick="likePost('${id}')">❤</span>
-
-<span>${p.likes.length} likes</span>
-<span>${p.comments.length} comments</span>
+<span class="like" onclick="likePost('${p.id}')">❤</span>
+${p.likes.length} likes
 
 </div>
 
-<input placeholder="comment..." onkeypress="if(event.key==='Enter')commentPost('${id}',this.value,this)">
+<input placeholder="comment" onkeypress="if(event.key==='Enter')comment('${p.id}',this.value,this)">
 
-<div id="c_${id}"></div>
+<div id="c${p.id}"></div>
 
 `
 
 feed.appendChild(div)
 
-p.comments.forEach(c=>{
-
-let el=document.createElement("div")
-el.className="comment"
-el.innerText=c.username+": "+c.text
-
-div.querySelector("#c_"+id).appendChild(el)
-
-})
+loadComments(p.id)
 
 })
 
@@ -458,35 +294,70 @@ div.querySelector("#c_"+id).appendChild(el)
 
 async function likePost(id){
 
-let ref=db.collection("posts").doc(id)
+const {data}=await supabase.auth.getUser()
 
-await ref.update({
-likes:firebase.firestore.FieldValue.arrayUnion(auth.currentUser.uid)
-})
+let {data:post}=await supabase
+.from("posts")
+.select("likes")
+.eq("id",id)
+.single()
+
+let likes=post.likes||[]
+
+if(!likes.includes(data.user.id))
+likes.push(data.user.id)
+
+await supabase
+.from("posts")
+.update({likes:likes})
+.eq("id",id)
 
 loadPosts()
 
 }
 
-async function commentPost(id,text,input){
+async function comment(id,text,input){
 
-if(!text)return
+const {data}=await supabase.auth.getUser()
 
-let user=auth.currentUser
-let udoc=await db.collection("users").doc(user.uid).get()
+let user=await supabase
+.from("users")
+.select("username")
+.eq("id",data.user.id)
+.single()
 
-await db.collection("posts").doc(id).update({
-
-comments:firebase.firestore.FieldValue.arrayUnion({
-username:udoc.data().username,
+await supabase.from("comments").insert({
+post_id:id,
+username:user.data.username,
 text:text
-})
-
 })
 
 input.value=""
 
-loadPosts()
+loadComments(id)
+
+}
+
+async function loadComments(id){
+
+let {data}=await supabase
+.from("comments")
+.select("*")
+.eq("post_id",id)
+
+let box=document.getElementById("c"+id)
+
+if(!box)return
+
+box.innerHTML=""
+
+data.forEach(c=>{
+
+let d=document.createElement("div")
+d.innerText=c.username+": "+c.text
+box.appendChild(d)
+
+})
 
 }
 
