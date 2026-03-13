@@ -127,8 +127,8 @@ border-radius:12px;
 <script>
 
 const supabase = supabase.createClient(
-"YOUR_SUPABASE_URL",
-"YOUR_SUPABASE_ANON_KEY"
+"postgresql://postgres:[YOUR-PASSWORD]@db.evcpqywmsueshdelhtrr.supabase.co:5432/postgres",
+"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV2Y3BxeXdtc3Vlc2hkZWxodHJyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM0MTI0OTMsImV4cCI6MjA4ODk4ODQ5M30.mg7BYbVYixYp5h1qRB57eccHypDMpuc_j6ZKJELOMSU"
 )
 
 async function signup(){
