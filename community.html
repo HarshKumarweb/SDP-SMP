@@ -1,5 +1,4 @@
-<!DOCTYPE html><html>
-<head><meta charset="UTF-8">
+<!DOCTYPE html><html><head><meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1"><title>SDP Community</title><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><style>
 
 body{
@@ -90,11 +89,13 @@ font-weight:bold;
 .like{
 cursor:pointer;
 font-size:20px;
+color:white;
 }
 
 .comment{
 font-size:14px;
 margin-top:4px;
+color:#ddd;
 }
 
 </style></head><body><header>
@@ -118,8 +119,8 @@ Already have account? Login
 const { createClient } = supabase
 
 const db = createClient(
-"https://evcpqywmsueshdelhtrr.supabase.co",
-"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV2Y3BxeXdtc3Vlc2hkZWxodHJyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM0MTI0OTMsImV4cCI6MjA4ODk4ODQ5M30.mg7BYbVYixYp5h1qRB57eccHypDMpuc_j6ZKJELOMSU"
+"YOUR_SUPABASE_URL",
+"YOUR_SUPABASE_KEY"
 )
 
 function showSignup(){
@@ -134,8 +135,8 @@ document.getElementById("loginBox").style.display="block"
 
 async function signup(){
 
-let username=document.getElementById("signupUsername").value
-let email=document.getElementById("signupEmail").value
+let username=document.getElementById("signupUsername").value.trim()
+let email=document.getElementById("signupEmail").value.trim()
 let password=document.getElementById("signupPassword").value
 
 if(username!==username.toLowerCase()){
@@ -148,7 +149,7 @@ alert("Password must be at least 8 characters")
 return
 }
 
-const { data, error } = await db.auth.signUp({
+const { error } = await db.auth.signUp({
 email:email,
 password:password
 })
@@ -157,16 +158,6 @@ if(error){
 alert(error.message)
 return
 }
-
-if(!data.user){
-alert("Signup failed")
-return
-}
-
-await db.from("users").insert({
-id:data.user.id,
-username:username
-})
 
 alert("Account created. Please login.")
 showLogin()
@@ -249,7 +240,7 @@ let title=document.getElementById("title").value
 let file=document.getElementById("image").files[0]
 
 if(!file){
-alert("Select an image")
+alert("Select image")
 return
 }
 
@@ -264,7 +255,7 @@ let { data:userRow } = await db
 .single()
 
 if(!userRow){
-alert("User profile missing")
+alert("Profile not ready yet. Please wait a few seconds and try again.")
 return
 }
 
@@ -396,4 +387,4 @@ box.appendChild(div)
 }
 
 </script></body>
-  </html>
+</html>
